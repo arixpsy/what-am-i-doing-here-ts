@@ -1,5 +1,8 @@
 {
-  "main": "server.js",
+  "name": "what-am-i-doing-here-server",
+  "private": true,
+  "version": "0.0.0",
+  "main": "build/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
