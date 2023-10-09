@@ -7,6 +7,14 @@ import { Socket } from 'socket.io-client'
 export default class BaseMap extends Phaser.Scene {
 	private io: Socket | undefined
 	private player: Phaser.GameObjects.Container | undefined
+	private playerStates: Record<
+		string,
+		{
+			vertices: Array<{ x: number; y: number }>
+			position: { x: number; y: number }
+		}
+	> = {}
+	private playerObjects: Record<string, Phaser.GameObjects.Container> = {}
 
 	constructor() {
 		super('baseMap')
@@ -86,11 +94,23 @@ export default class BaseMap extends Phaser.Scene {
 		})
 
 		this.io?.on('update state', (data) => {
-			// console.log(data)
+			this.playerStates = data.players
 		})
 	}
 
-	updatePlayer() {
+	update() {
+		for (const key of Object.keys(this.playerObjects)) {
+			if (this.playerStates[key]) {
+				console.log('already exist')
+			} else {
+				console.log('remove')
+			}
+		}
 
+		for (const key of Object.keys(this.playerStates)) {
+			if (!this.playerObjects[key]) {
+				console.log('add')
+			}
+		}
 	}
 }
