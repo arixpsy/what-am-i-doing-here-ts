@@ -59,8 +59,6 @@ Matter.Composite.add(MapEngines.FOREST.world, [
 
 const frameRate = 1000 / 30
 
-Matter.Engine.update(MapEngines.FOREST, frameRate)
-
 setInterval(() => {
   for (const key of Object.keys(MapEntities.FOREST.PLAYERS)) {
     const { command, body, isInAir } = MapEntities.FOREST.PLAYERS[key]
@@ -84,9 +82,20 @@ setInterval(() => {
     }
   }
 
-  const players: Record<string, Array<{ x: number; y: number }>> = {}
+  Matter.Engine.update(MapEngines.FOREST, frameRate)
+
+  const players: Record<
+    string,
+    {
+      vertices: Array<{ x: number; y: number }>
+      position: { x: number; y: number }
+    }
+  > = {}
   for (const key of Object.keys(MapEntities.FOREST.PLAYERS)) {
-    players[key] = toVertices(MapEntities.FOREST.PLAYERS[key].body)
+    players[key] = {
+      vertices: toVertices(MapEntities.FOREST.PLAYERS[key].body),
+      position: MapEntities.FOREST.PLAYERS[key].body.position,
+    }
   }
 
   io.emit('update state', {

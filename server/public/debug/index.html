@@ -31,7 +31,7 @@
 			platforms.forEach((p) => draw(p, ctx))
 
 			ctx.fillStyle = 'rgba(0, 0, 255, 0.2)'
-			Object.values(players).forEach((p) => draw(p, ctx))
+			Object.values(players).forEach((p) => draw(p.vertices, ctx))
 		})
 
 		const userInput = {
