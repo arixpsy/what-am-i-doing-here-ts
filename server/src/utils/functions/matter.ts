@@ -24,3 +24,6 @@ export const generatePlatforms = (
   platforms.map(({ height, width, x, y }) =>
     Matter.Bodies.rectangle(x, y, width, height, { isStatic: true })
   )
+
+export const toVertices = (e: Matter.Body) =>
+  e.vertices.map(({ x, y }) => ({ x, y }))
