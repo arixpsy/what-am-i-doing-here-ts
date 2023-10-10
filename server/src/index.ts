@@ -65,7 +65,7 @@ setInterval(() => {
     if (command) {
       if (command.jump && !isInAir) {
         MapEntities.FOREST.PLAYERS[key].isInAir = true
-        Matter.Body.applyForce(body, body.position, { x: 0, y: -0.085 })
+        Matter.Body.applyForce(body, body.position, { x: 0, y: -0.03 })
       }
 
       if (isInAir && parseFloat(body.velocity.y.toFixed(10)) === 0) {
@@ -74,9 +74,9 @@ setInterval(() => {
 
       const position = { ...body.position }
       if (command.right && !command.left) {
-        position.x += 9
+        position.x += 5
       } else if (!command.right && command.left) {
-        position.x -= 9
+        position.x -= 5
       }
       Matter.Body.setPosition(body, position)
     }
