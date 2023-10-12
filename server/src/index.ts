@@ -61,15 +61,19 @@ const frameRate = 1000 / 30
 
 setInterval(() => {
   for (const key of Object.keys(MapEntities.FOREST.PLAYERS)) {
-    const { command, body, isInAir } = MapEntities.FOREST.PLAYERS[key]
+    const {
+      command,
+      body,
+      state: { isInAir },
+    } = MapEntities.FOREST.PLAYERS[key]
     if (command) {
       if (command.jump && !isInAir) {
-        MapEntities.FOREST.PLAYERS[key].isInAir = true
+        MapEntities.FOREST.PLAYERS[key].state.isInAir = true
         Matter.Body.applyForce(body, body.position, { x: 0, y: -0.03 })
       }
 
       if (isInAir && parseFloat(body.velocity.y.toFixed(10)) === 0) {
-        MapEntities.FOREST.PLAYERS[key].isInAir = false
+        MapEntities.FOREST.PLAYERS[key].state.isInAir = false
       }
 
       const position = { ...body.position }
@@ -109,8 +113,19 @@ io.on('connection', (socket) => {
   console.log(`🟢 A user connected: ${socket.id}`)
 
   MapEntities.FOREST.PLAYERS[socket.id] = {
-    command: {},
-    isInAir: true,
+    command: {
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      jump: false,
+    },
+    state: {
+      isInAir: true,
+      isFacingLeft: false,
+      isFacingRight: true,
+      isMoving: false,
+    },
     body: Matter.Bodies.rectangle(
       forestConfig.spawn.x,
       forestConfig.spawn.y,

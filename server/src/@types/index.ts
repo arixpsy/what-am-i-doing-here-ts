@@ -29,15 +29,32 @@ export type MapConfig = {
   }
 }
 
+export const Command = {
+	UP: 'up',
+	DOWN: 'down',
+	LEFT: 'left',
+	RIGHT: 'right',
+	JUMP: 'jump',
+} as const
+
+export type Command = (typeof Command)[keyof typeof Command]
+
+export type PlayerState = {
+  isInAir: boolean
+  isMoving: boolean
+  isFacingLeft: boolean
+  isFacingRight: boolean
+}
+
 export type MapEntities = {
   WALLS: Array<Matter.Body>
   PLATFORMS: Array<Matter.Body>
   PLAYERS: Record<
     string,
     {
-      command: Record<string, boolean>
+      command: Record<Command, boolean>
       body: Matter.Body
-      isInAir: boolean
+      state: PlayerState,
     }
   >
 }
