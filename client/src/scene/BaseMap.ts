@@ -3,30 +3,27 @@ import forestBg from './../assets/backgrounds/forest.png'
 import pinkbeanIdle from './../assets/sprites/pinkBean/pink-bean-idle.png'
 import pinkbeanMoving from './../assets/sprites/pinkBean/pink-bean-moving.png'
 import { Socket } from 'socket.io-client'
+import { forestConfig } from './../../../server/src/utils/constants/maps'
+import { InputController } from '../utils/inputController'
+import { UpdateStateBody } from '../../../server/src/@types'
+import { PlayerObject } from '../@types'
 
 export default class BaseMap extends Phaser.Scene {
 	private io: Socket | undefined
-	private player: Phaser.GameObjects.Container | undefined
-	private playerStates: Record<
-		string,
-		{
-			vertices: Array<{ x: number; y: number }>
-			position: { x: number; y: number }
-		}
-	> = {}
-	private playerObjects: Record<string, Phaser.GameObjects.Container> = {}
+	private playerStates: UpdateStateBody = {}
+	private playerObjects: Record<string, PlayerObject> = {}
+	private inputController?: InputController
 
 	constructor() {
 		super('baseMap')
 	}
 
 	init() {
-		console.log('init')
 		this.io = this.game.registry.get('socket')
+		this.inputController = new InputController(this, this.io)
 	}
 
 	preload() {
-		console.log('preload')
 		this.load.image('background-forest', forestBg)
 
 		this.load.spritesheet('sprite-pink-bean-idle', pinkbeanIdle, {
@@ -41,12 +38,17 @@ export default class BaseMap extends Phaser.Scene {
 	}
 
 	create() {
-		console.log('create')
-
 		this.anims.create({
 			key: 'sprite-pink-bean-idle',
 			frames: this.anims.generateFrameNumbers('sprite-pink-bean-idle'),
 			frameRate: 4,
+			repeat: -1,
+		})
+
+		this.anims.create({
+			key: 'sprite-pink-bean-moving',
+			frames: this.anims.generateFrameNumbers('sprite-pink-bean-moving', {}),
+			frameRate: 7,
 			repeat: -1,
 		})
 
@@ -55,12 +57,11 @@ export default class BaseMap extends Phaser.Scene {
 		this.io?.connect()
 	}
 
-	addPlayer() {
-		let spawnX = 200
-		let spawnY = 400
+	addPlayer(id: string, isLocalPlayer: boolean) {
+		const { x: spawnX, y: spawnY } = forestConfig.spawn
 
-		let playerSprite = this.add.sprite(0, 15, 'sprite-pink-bean-idle')
-		const newName = this.add.text(0, 0, 'Player', {
+		let sprite = this.add.sprite(0, 15, 'sprite-pink-bean-idle')
+		const nameLabel = this.add.text(0, 0, 'Player', {
 			fontFamily: 'monospace',
 			backgroundColor: 'rgba(0,0,0,0.7)',
 			padding: {
@@ -68,19 +69,25 @@ export default class BaseMap extends Phaser.Scene {
 				y: 2,
 			},
 		})
-		newName.setOrigin(0.5, 0)
-		newName.setY(20)
+		nameLabel.setOrigin(0.5, 0)
+		nameLabel.setY(20)
 		let container = this.add
-			.container(spawnX, spawnY, [playerSprite, newName])
+			.container(spawnX, spawnY, [sprite, nameLabel])
 			.setSize(30, 30)
 
-		playerSprite.setOrigin(0.5, 1)
-		playerSprite.play('sprite-pink-bean-idle', true)
+		sprite.setOrigin(0.5, 1)
+		sprite.play('sprite-pink-bean-idle', true)
 
-		this.player = container
+		this.playerObjects[id] = {
+			sprite,
+			container,
+			nameLabel,
+		}
 
-		this.cameras.main.setBounds(0, 0, 1024, 560)
-		this.cameras.main.startFollow(container, true)
+		if (isLocalPlayer) {
+			this.cameras.main.setBounds(0, 0, 1024, 560)
+			this.cameras.main.startFollow(container, true)
+		}
 	}
 
 	loadMap() {
@@ -88,29 +95,46 @@ export default class BaseMap extends Phaser.Scene {
 	}
 
 	setupSocket() {
-		this.io?.on('connect', () => {
-			console.log('connected')
-			console.log(this.io?.id)
-		})
+		this.io?.on('update state', (data: { players: UpdateStateBody }) => {
+			const newPlayerState = data.players
+			for (const key of Object.keys(this.playerObjects)) {
+				if (this.playerStates[key]) {
+					this.playerObjects[key].container.setX(
+						this.playerStates[key].position.x
+					)
+					this.playerObjects[key].container.setY(
+						this.playerStates[key].position.y + 5
+					)
 
-		this.io?.on('update state', (data) => {
-			this.playerStates = data.players
+					const { isFacingLeft, isFacingRight, isMoving } =
+						this.playerStates[key].state
+					if (isFacingLeft) {
+						this.playerObjects[key].sprite.flipX = false
+					} else if (isFacingRight) {
+						this.playerObjects[key].sprite.flipX = true
+					}
+
+					if (isMoving) {
+						this.playerObjects[key].sprite.play('sprite-pink-bean-moving', true)
+					} else {
+						this.playerObjects[key].sprite.play('sprite-pink-bean-idle', true)
+					}
+				} else {
+					this.playerObjects[key].container.destroy()
+					delete this.playerObjects[key]
+				}
+			}
+
+			for (const key of Object.keys(this.playerStates)) {
+				if (!this.playerObjects[key]) {
+					const isLocalPlayer = key == this.io?.id
+					this.addPlayer(key, isLocalPlayer)
+				}
+			}
+
+			this.playerStates = newPlayerState
 		})
 	}
 
-	update() {
-		for (const key of Object.keys(this.playerObjects)) {
-			if (this.playerStates[key]) {
-				console.log('already exist')
-			} else {
-				console.log('remove')
-			}
-		}
-
-		for (const key of Object.keys(this.playerStates)) {
-			if (!this.playerObjects[key]) {
-				console.log('add')
-			}
-		}
-	}
+	update() {}
 }
