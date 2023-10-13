@@ -1,4 +1,4 @@
-import { Environment } from './../../@types'
+import { Environment } from './../../@types/index.js'
 
 export const Env: Record<string, string> = {
   ENV: process.env.ENV ?? Environment.DEV,

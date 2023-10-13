@@ -1,4 +1,4 @@
-import { MapConfig, Map } from '../../@types'
+import { type MapConfig, Map } from '../../@types/index.js'
 
 export const forestConfig = {
   key: Map.FOREST,

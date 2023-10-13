@@ -1,13 +1,16 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "sourceMap": true,
     "resolveJsonModule": true,
     "outDir": "build",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]

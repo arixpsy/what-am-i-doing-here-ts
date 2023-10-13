@@ -1,3 +1,5 @@
+import Matter from "matter-js"
+
 export const Environment = {
   DEV: 'dev',
   PROD: 'prod',

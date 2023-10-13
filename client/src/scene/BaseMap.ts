@@ -12,7 +12,7 @@ export default class BaseMap extends Phaser.Scene {
 	private io: Socket | undefined
 	private playerStates: UpdateStateBody = {}
 	private playerObjects: Record<string, PlayerObject> = {}
-	private inputController?: InputController
+	// private inputController?: InputController
 
 	constructor() {
 		super('baseMap')
@@ -20,7 +20,8 @@ export default class BaseMap extends Phaser.Scene {
 
 	init() {
 		this.io = this.game.registry.get('socket')
-		this.inputController = new InputController(this, this.io)
+		// this.inputController = new InputController(this, this.io)
+		new InputController(this, this.io)
 	}
 
 	preload() {

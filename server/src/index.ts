@@ -5,14 +5,14 @@ import http from 'http'
 import Matter from 'matter-js'
 import { Server } from 'socket.io'
 import {
-  Coordinates,
   Environment,
   Map,
-  MapEntities,
-  PlayerState,
-  UpdateStateBody,
+  type Coordinates,
+  type MapEntities,
+  type PlayerState,
+  type UpdateStateBody,
 } from './@types/index.js'
-import { Env, CORS_ORIGIN } from './utils/constants'
+import { Env, CORS_ORIGIN } from './utils/constants/index.js'
 import { engineConfig } from './utils/constants/matter.js'
 import { forestConfig } from './utils/constants/maps.js'
 import { toVertices } from './utils/functions/matter.js'
