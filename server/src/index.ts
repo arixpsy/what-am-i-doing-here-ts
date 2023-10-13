@@ -4,7 +4,14 @@ import express from 'express'
 import http from 'http'
 import Matter from 'matter-js'
 import { Server } from 'socket.io'
-import { Environment, Map, MapEntities } from './@types/index.js'
+import {
+  Coordinates,
+  Environment,
+  Map,
+  MapEntities,
+  PlayerState,
+  UpdateStateBody,
+} from './@types/index.js'
 import { Env, CORS_ORIGIN } from './utils/constants'
 import { engineConfig } from './utils/constants/matter.js'
 import { forestConfig } from './utils/constants/maps.js'
@@ -79,8 +86,16 @@ setInterval(() => {
       const position = { ...body.position }
       if (command.right && !command.left) {
         position.x += 5
+        MapEntities.FOREST.PLAYERS[key].state.isFacingRight = true
+        MapEntities.FOREST.PLAYERS[key].state.isFacingLeft = false
+        MapEntities.FOREST.PLAYERS[key].state.isMoving = true
       } else if (!command.right && command.left) {
         position.x -= 5
+        MapEntities.FOREST.PLAYERS[key].state.isFacingRight = false
+        MapEntities.FOREST.PLAYERS[key].state.isFacingLeft = true
+        MapEntities.FOREST.PLAYERS[key].state.isMoving = true
+      } else if (!command.right && !command.left) {
+        MapEntities.FOREST.PLAYERS[key].state.isMoving = false
       }
       Matter.Body.setPosition(body, position)
     }
@@ -88,17 +103,12 @@ setInterval(() => {
 
   Matter.Engine.update(MapEngines.FOREST, frameRate)
 
-  const players: Record<
-    string,
-    {
-      vertices: Array<{ x: number; y: number }>
-      position: { x: number; y: number }
-    }
-  > = {}
+  const players: UpdateStateBody = {}
   for (const key of Object.keys(MapEntities.FOREST.PLAYERS)) {
     players[key] = {
       vertices: toVertices(MapEntities.FOREST.PLAYERS[key].body),
       position: MapEntities.FOREST.PLAYERS[key].body.position,
+      state: MapEntities.FOREST.PLAYERS[key].state,
     }
   }
 

@@ -9,6 +9,8 @@ export const Map = {
   FOREST: 'FOREST',
 } as const
 
+export type Coordinates = { x: number; y: number }
+
 export type Map = (typeof Map)[keyof typeof Map]
 
 export type MapConfig = {
@@ -17,24 +19,21 @@ export type MapConfig = {
     height: number
     width: number
   }
-  platform: Array<{
-    height: number
-    width: number
-    x: number
-    y: number
-  }>
-  spawn: {
-    x: number
-    y: number
-  }
+  platform: Array<
+    Coordinates & {
+      height: number
+      width: number
+    }
+  >
+  spawn: Coordinates
 }
 
 export const Command = {
-	UP: 'up',
-	DOWN: 'down',
-	LEFT: 'left',
-	RIGHT: 'right',
-	JUMP: 'jump',
+  UP: 'up',
+  DOWN: 'down',
+  LEFT: 'left',
+  RIGHT: 'right',
+  JUMP: 'jump',
 } as const
 
 export type Command = (typeof Command)[keyof typeof Command]
@@ -54,7 +53,16 @@ export type MapEntities = {
     {
       command: Record<Command, boolean>
       body: Matter.Body
-      state: PlayerState,
+      state: PlayerState
     }
   >
 }
+
+export type UpdateStateBody = Record<
+  string,
+  {
+    vertices: Array<Coordinates>
+    position: Coordinates
+    state: PlayerState
+  }
+>
