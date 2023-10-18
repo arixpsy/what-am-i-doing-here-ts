@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 import { Socket } from 'socket.io-client'
-import { Command } from './../../../server/src/@types'
+import { Command } from './../../../server/src/@types/command'
 
 const commandKeyCodes: Record<Command, number> = {
 	up: Phaser.Input.Keyboard.KeyCodes.W,
