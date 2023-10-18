@@ -1,6 +1,6 @@
-import { type MapConfig, Map } from '../../@types/index.js'
+import { type MapConfig, Map } from '../../../@types/map.js'
 
-export const forestConfig = {
+export const FOREST_CONFIG = {
   key: Map.FOREST,
   dimensions: {
     height: 560,
@@ -18,4 +18,5 @@ export const forestConfig = {
     x: 512,
     y: 300,
   },
-} satisfies MapConfig
+} satisfies MapConfig 
+
