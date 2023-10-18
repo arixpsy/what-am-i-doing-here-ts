@@ -1,18 +1,30 @@
 import Phaser from 'phaser'
 import { Socket } from 'socket.io-client'
-import MapData from '../utils/constants/map'
-import { InputController } from '../utils/inputController'
-import { UpdateStateBody } from '../../../server/src/@types/game'
 import { PlayerObject } from '../@types'
+import { ImageKey } from '../@types/image'
+import { SoundKey } from '../@types/sound'
+import { UpdateStateBody } from '../../../server/src/@types/game'
+import { MapConfig } from '../../../server/src/@types/map'
+import { InputController } from '../utils/inputController'
 
 export default class BaseMap extends Phaser.Scene {
 	private io: Socket | undefined
+	private config: MapConfig
+	private backgroundImageKey: ImageKey
+	private backgroundSoundKey: SoundKey
 	private playerStates: UpdateStateBody = {}
 	private playerObjects: Record<string, PlayerObject> = {}
 	// private inputController?: InputController
 
-	constructor() {
-		super('baseMap')
+	constructor(
+		mapConfig: MapConfig,
+		backgroundImageKey: ImageKey,
+		soundkey: SoundKey
+	) {
+		super(mapConfig.key)
+		this.config = mapConfig
+		this.backgroundImageKey = backgroundImageKey
+		this.backgroundSoundKey = soundkey
 	}
 
 	init() {
@@ -25,12 +37,13 @@ export default class BaseMap extends Phaser.Scene {
 
 	create() {
 		this.loadMap()
+		this.loadSound()
 		this.setupSocket()
 		this.io?.connect()
 	}
 
 	addPlayer(id: string, isLocalPlayer: boolean) {
-		const { x: spawnX, y: spawnY } = MapData.FOREST.spawn
+		const { x: spawnX, y: spawnY } = this.config.spawn
 
 		let sprite = this.add.sprite(0, 15, 'PINK_BEAN_IDLE')
 		const nameLabel = this.add.text(0, 0, 'Player', {
@@ -63,7 +76,26 @@ export default class BaseMap extends Phaser.Scene {
 	}
 
 	loadMap() {
-		this.add.image(0, 0, MapData.FOREST.backgroundImage).setOrigin(0, 0)
+		this.add.image(0, 0, this.backgroundImageKey).setOrigin(0, 0)
+	}
+
+	loadSound() {
+		const soundManager = this.sound as Phaser.Sound.HTML5AudioSoundManager
+
+		if (!soundManager.get(SoundKey.JUMP)) {
+			soundManager.add(SoundKey.JUMP)
+		}
+
+		if (!soundManager.get(SoundKey.PORTAL)) {
+			soundManager.add(SoundKey.PORTAL)
+		}
+
+		if (!soundManager.get(this.backgroundSoundKey)) {
+			soundManager.add(this.backgroundSoundKey, {
+				loop: true,
+			})
+		}
+		// soundManager.play(this.backgroundSoundKey)
 	}
 
 	setupSocket() {

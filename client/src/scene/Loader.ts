@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { SceneKey } from '../@types/scene'
+import { Map } from '../../../server/src/@types/map'
 import SpriteData from '../utils/constants/sprite'
 import SoundData from '../utils/constants/sound'
 import ImageData from '../utils/constants/image'
@@ -86,7 +87,7 @@ export default class Loader extends Phaser.Scene {
 	}
 
 	onLoadComplete() {
-		this.scene.start('baseMap')
+		this.scene.start(Map.FOREST)
 	}
 
 	onLoadProgress(progress: number) {
