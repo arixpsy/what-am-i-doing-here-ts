@@ -1,11 +1,8 @@
 import Phaser from 'phaser'
-import forestBg from './../assets/backgrounds/forest.png'
-import pinkbeanIdle from './../assets/sprites/pinkBean/pink-bean-idle.png'
-import pinkbeanMoving from './../assets/sprites/pinkBean/pink-bean-moving.png'
 import { Socket } from 'socket.io-client'
-import { forestConfig } from './../../../server/src/utils/constants/maps'
+import MapData from '../utils/constants/map'
 import { InputController } from '../utils/inputController'
-import { UpdateStateBody } from '../../../server/src/@types'
+import { UpdateStateBody } from '../../../server/src/@types/game'
 import { PlayerObject } from '../@types'
 
 export default class BaseMap extends Phaser.Scene {
@@ -24,44 +21,18 @@ export default class BaseMap extends Phaser.Scene {
 		new InputController(this, this.io)
 	}
 
-	preload() {
-		this.load.image('background-forest', forestBg)
-
-		this.load.spritesheet('sprite-pink-bean-idle', pinkbeanIdle, {
-			frameWidth: 100,
-			frameHeight: 100,
-		})
-
-		this.load.spritesheet('sprite-pink-bean-moving', pinkbeanMoving, {
-			frameWidth: 100,
-			frameHeight: 100,
-		})
-	}
+	preload() {}
 
 	create() {
-		this.anims.create({
-			key: 'sprite-pink-bean-idle',
-			frames: this.anims.generateFrameNumbers('sprite-pink-bean-idle'),
-			frameRate: 4,
-			repeat: -1,
-		})
-
-		this.anims.create({
-			key: 'sprite-pink-bean-moving',
-			frames: this.anims.generateFrameNumbers('sprite-pink-bean-moving', {}),
-			frameRate: 7,
-			repeat: -1,
-		})
-
 		this.loadMap()
 		this.setupSocket()
 		this.io?.connect()
 	}
 
 	addPlayer(id: string, isLocalPlayer: boolean) {
-		const { x: spawnX, y: spawnY } = forestConfig.spawn
+		const { x: spawnX, y: spawnY } = MapData.FOREST.spawn
 
-		let sprite = this.add.sprite(0, 15, 'sprite-pink-bean-idle')
+		let sprite = this.add.sprite(0, 15, 'PINK_BEAN_IDLE')
 		const nameLabel = this.add.text(0, 0, 'Player', {
 			fontFamily: 'monospace',
 			backgroundColor: 'rgba(0,0,0,0.7)',
@@ -77,7 +48,7 @@ export default class BaseMap extends Phaser.Scene {
 			.setSize(30, 30)
 
 		sprite.setOrigin(0.5, 1)
-		sprite.play('sprite-pink-bean-idle', true)
+		sprite.play('PINK_BEAN_IDLE', true)
 
 		this.playerObjects[id] = {
 			sprite,
@@ -92,7 +63,7 @@ export default class BaseMap extends Phaser.Scene {
 	}
 
 	loadMap() {
-		this.add.image(0, 0, 'background-forest').setOrigin(0, 0)
+		this.add.image(0, 0, MapData.FOREST.backgroundImage).setOrigin(0, 0)
 	}
 
 	setupSocket() {
@@ -116,9 +87,9 @@ export default class BaseMap extends Phaser.Scene {
 					}
 
 					if (isMoving) {
-						this.playerObjects[key].sprite.play('sprite-pink-bean-moving', true)
+						this.playerObjects[key].sprite.play('PINK_BEAN_MOVING', true)
 					} else {
-						this.playerObjects[key].sprite.play('sprite-pink-bean-idle', true)
+						this.playerObjects[key].sprite.play('PINK_BEAN_IDLE', true)
 					}
 				} else {
 					this.playerObjects[key].container.destroy()

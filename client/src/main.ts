@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import io from 'socket.io-client'
 import BaseMap from './scene/BaseMap'
+import Loader from './scene/Loader'
 
 const config: Phaser.Types.Core.GameConfig = {
 	width: 1000,
@@ -10,14 +11,7 @@ const config: Phaser.Types.Core.GameConfig = {
 	dom: {
 		createContainer: true,
 	},
-	scene: [BaseMap],
-	physics: {
-		default: 'arcade',
-		arcade: {
-			debug: true,
-			gravity: { y: 750 },
-		},
-	},
+	scene: [Loader, BaseMap],
 	scale: {
 		mode: Phaser.Scale.FIT,
 		autoCenter: Phaser.Scale.CENTER_BOTH,
