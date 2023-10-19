@@ -14,6 +14,7 @@ type SpriteData = {
 	idle: SpriteSheet
 	moving?: SpriteSheet
 	key: Sprite
+	label: string,
 }
 
 const SpriteData: Record<Sprite, SpriteData> = {
@@ -33,6 +34,7 @@ const SpriteData: Record<Sprite, SpriteData> = {
 			framerate: 7,
 		},
 		key: Sprite.PINK_BEAN,
+		label: 'Pink Bean'
 	},
 }
 
