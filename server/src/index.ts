@@ -17,7 +17,6 @@ import {
   generatePlatforms,
   generateWalls,
 } from './utils/functions/matter.js'
-import { FOREST_CONFIG } from './utils/constants/maps/forest.js'
 
 const port = Env.PORT
 const env = Env.ENV as Environment
@@ -49,14 +48,20 @@ server.listen(port, () => {
 
 const MapEngines: Record<Map, Matter.Engine> = {
   FOREST: Matter.Engine.create(engineConfig),
+  STREET: Matter.Engine.create(engineConfig),
 }
 
 const MapEntities: Record<Map, MapEntities> = (() => {
-  const { FOREST } = MAP_CONFIG
+  const { FOREST, STREET } = MAP_CONFIG
   return {
     FOREST: {
       walls: generateWalls(FOREST.dimensions),
       platforms: generatePlatforms(FOREST.platform),
+      players: {},
+    },
+    STREET: {
+      walls: generateWalls(STREET.dimensions),
+      platforms: generatePlatforms(STREET.platform),
       players: {},
     },
   }
@@ -179,5 +184,10 @@ io.on('connection', (socket) => {
     MapEntities[mapKey].players[socket.id].command = data
   })
 
-  socket.on('register', (cb) => cb({ FOREST: FOREST_CONFIG.dimensions }))
+  socket.on('register', (cb) =>
+    cb({
+      FOREST: MAP_CONFIG.FOREST.dimensions,
+      STREET: MAP_CONFIG.STREET.dimensions,
+    })
+  )
 })

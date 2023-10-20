@@ -2,6 +2,7 @@ import type { Coordinates, Dimensions } from './index.js'
 
 export const Map = {
   FOREST: 'FOREST',
+  STREET: 'STREET',
 } as const
 
 export type Map = (typeof Map)[keyof typeof Map]
