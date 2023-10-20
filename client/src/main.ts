@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import io from 'socket.io-client'
 import Loader from './scene/Loader'
+import Login from './scene/Login'
 import Forest from './scene/Forest'
 
 const config: Phaser.Types.Core.GameConfig = {
@@ -11,7 +12,7 @@ const config: Phaser.Types.Core.GameConfig = {
 	dom: {
 		createContainer: true,
 	},
-	scene: [Loader, Forest],
+	scene: [Loader, Login, Forest],
 	scale: {
 		mode: Phaser.Scale.FIT,
 		autoCenter: Phaser.Scale.CENTER_BOTH,
