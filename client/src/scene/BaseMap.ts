@@ -16,7 +16,6 @@ export default class BaseMap extends Phaser.Scene {
 	private backgroundSoundKey: SoundKey
 	private playerStates: UpdateStateBody = {}
 	private playerObjects: Record<string, PlayerObject> = {}
-	// private inputController?: InputController
 
 	constructor(
 		mapConfig: MapConfig,
@@ -31,7 +30,6 @@ export default class BaseMap extends Phaser.Scene {
 
 	init() {
 		this.io = this.game.registry.get('socket')
-		// this.inputController = new InputController(this, this.io)
 		new InputController(this, this.io)
 	}
 
