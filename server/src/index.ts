@@ -4,16 +4,19 @@ import express from 'express'
 import http from 'http'
 import Matter from 'matter-js'
 import { Server } from 'socket.io'
-import {
-  Environment,
-} from './@types/index.js'
-import { Map } from './@types/map.js'
+import { Environment } from './@types/index.js'
 import type { MapEntities, UpdateStateBody } from './@types/game.js'
+import { Map } from './@types/map.js'
+import type { Sprite } from './@types/sprite.js'
 import { Env, CORS_ORIGIN } from './utils/constants/index.js'
-import { engineConfig } from './utils/constants/matter.js'
 import { MAP_CONFIG } from './utils/constants/maps/index.js'
-import { toVertices } from './utils/functions/matter.js'
-import { generatePlatforms, generateWalls } from './utils/functions/matter.js'
+import { engineConfig } from './utils/constants/matter.js'
+import { createPlayer } from './utils/functions/game.js'
+import {
+  toVertices,
+  generatePlatforms,
+  generateWalls,
+} from './utils/functions/matter.js'
 import { FOREST_CONFIG } from './utils/constants/maps/forest.js'
 
 const port = Env.PORT
@@ -24,7 +27,7 @@ const server = http.createServer(app)
 const io = new Server(server, {
   cors: {
     origin: CORS_ORIGIN[env],
-    // credentials: true,
+    credentials: true,
   },
 })
 
@@ -55,7 +58,7 @@ const MapEntities: Record<Map, MapEntities> = (() => {
     FOREST: {
       walls: generateWalls(FOREST.dimensions),
       platforms: generatePlatforms(FOREST.platform),
-      players: {}
+      players: {},
     },
   }
 })()
@@ -64,17 +67,13 @@ for (const MapKey of Object.values(Map)) {
   const engine = MapEngines[MapKey].world
   const walls = MapEntities[MapKey].walls
   const platforms = MapEntities[MapKey].platforms
-  Matter.Composite.add(engine, [
-    ...walls,
-    ...platforms,
-  ])
+  Matter.Composite.add(engine, [...walls, ...platforms])
 }
-
-
 
 const frameRate = 1000 / 30
 
 setInterval(() => {
+  // TODO:
   for (const key of Object.keys(MapEntities.FOREST.players)) {
     const {
       command,
@@ -117,6 +116,8 @@ setInterval(() => {
       vertices: toVertices(MapEntities.FOREST.players[key].body),
       position: MapEntities.FOREST.players[key].body.position,
       state: MapEntities.FOREST.players[key].state,
+      displayName: MapEntities.FOREST.players[key].displayName,
+      spriteType: MapEntities.FOREST.players[key].spriteType,
     }
   }
 
@@ -128,50 +129,48 @@ setInterval(() => {
 }, frameRate)
 
 io.on('connection', (socket) => {
-  console.log(`🟢 A user connected: ${socket.id}`)
+  const displayName = socket.handshake.auth.displayName
+  const spriteType = socket.handshake.auth.spriteType as Sprite
+  const isPlayer = displayName && spriteType
+  let mapKey = Map.FOREST
+  let portalKey = 0
 
-  MapEntities.FOREST.players[socket.id] = {
-    command: {
-      up: false,
-      down: false,
-      left: false,
-      right: false,
-      jump: false,
-    },
-    state: {
-      isInAir: true,
-      isFacingLeft: false,
-      isFacingRight: true,
-      isMoving: false,
-    },
-    body: Matter.Bodies.rectangle(
-      MAP_CONFIG.FOREST.spawn.x,
-      MAP_CONFIG.FOREST.spawn.y,
-      50,
-      50,
-      {
-        inertia: Infinity,
-      }
-    ),
+  if (isPlayer) {
+    console.log(`🟢 User '${displayName}' has connected`)
+    MapEntities[mapKey].players[socket.id] = createPlayer(
+      spriteType,
+      displayName,
+      mapKey
+    )
+    MapEntities[mapKey].players[socket.id].body.collisionFilter.group = -1
+    MapEntities[mapKey].players[socket.id].body.friction = 0
+    Matter.Composite.add(
+      MapEngines[mapKey].world,
+      MapEntities[mapKey].players[socket.id].body
+    )
+    socket.join(mapKey)
+    io.to(socket.id).emit('join map', mapKey)
+    console.log(`🟢 User '${displayName}' has join ${mapKey}`)
+  } else {
+    console.log(`🟢 A debugger has connected: ${socket.id}`)
   }
-  MapEntities.FOREST.players[socket.id].body.collisionFilter.group = -1
-  MapEntities.FOREST.players[socket.id].body.friction = 0
-  Matter.Composite.add(
-    MapEngines.FOREST.world,
-    MapEntities.FOREST.players[socket.id].body
-  )
 
   socket.on('disconnect', function () {
-    console.log(`⛔ A user disconnected: ${socket.id}`)
+    if (!isPlayer) {
+      console.log(`⛔ A debugger has disconnected: ${socket.id}`)
+      return
+    }
+    console.log(`⛔ User '${displayName}' has disconnected`)
+
     Matter.Composite.remove(
-      MapEngines.FOREST.world,
-      MapEntities.FOREST.players[socket.id].body
+      MapEngines[mapKey].world,
+      MapEntities[mapKey].players[socket.id].body
     )
-    delete MapEntities.FOREST.players[socket.id]
+    delete MapEntities[mapKey].players[socket.id]
   })
 
   socket.on('userCommands', function (data) {
-    MapEntities.FOREST.players[socket.id].command = data
+    MapEntities[mapKey].players[socket.id].command = data
   })
 
   socket.on('register', (cb) => cb(FOREST_CONFIG.dimensions))

@@ -5,7 +5,9 @@ import { ImageKey } from '../@types/image'
 import { SoundKey } from '../@types/sound'
 import { UpdateStateBody } from '../../../server/src/@types/game'
 import { MapConfig } from '../../../server/src/@types/map'
+import { Sprite } from '../../../server/src/@types/sprite'
 import { InputController } from '../utils/inputController'
+import SpriteData from '../utils/constants/sprite'
 
 export default class BaseMap extends Phaser.Scene {
 	private io: Socket | undefined
@@ -39,14 +41,19 @@ export default class BaseMap extends Phaser.Scene {
 		this.loadMap()
 		this.loadSound()
 		this.setupSocket()
-		this.io?.connect()
 	}
 
-	addPlayer(id: string, isLocalPlayer: boolean) {
+	addPlayer(
+		id: string,
+		isLocalPlayer: boolean,
+		displayName: string,
+		spriteType: Sprite
+	) {
 		const { x: spawnX, y: spawnY } = this.config.spawn
+		const spriteConfig = SpriteData[spriteType]
 
-		let sprite = this.add.sprite(0, 15, 'PINK_BEAN_IDLE')
-		const nameLabel = this.add.text(0, 0, 'Player', {
+		let sprite = this.add.sprite(0, 15, spriteConfig.idle.key)
+		const nameLabel = this.add.text(0, 0, displayName, {
 			fontFamily: 'monospace',
 			backgroundColor: 'rgba(0,0,0,0.7)',
 			padding: {
@@ -61,7 +68,7 @@ export default class BaseMap extends Phaser.Scene {
 			.setSize(30, 30)
 
 		sprite.setOrigin(0.5, 1)
-		sprite.play('PINK_BEAN_IDLE', true)
+		sprite.play(spriteConfig.idle.key, true)
 
 		this.playerObjects[id] = {
 			sprite,
@@ -95,14 +102,19 @@ export default class BaseMap extends Phaser.Scene {
 				loop: true,
 			})
 		}
-		// soundManager.play(this.backgroundSoundKey)
+
+		soundManager.play(this.backgroundSoundKey)
 	}
 
 	setupSocket() {
 		this.io?.on('update state', (data: { players: UpdateStateBody }) => {
 			const newPlayerState = data.players
+
+			// Update state for existing player sprites
 			for (const key of Object.keys(this.playerObjects)) {
 				if (this.playerStates[key]) {
+					const spriteConfig = SpriteData[this.playerStates[key].spriteType]
+
 					this.playerObjects[key].container.setX(
 						this.playerStates[key].position.x
 					)
@@ -119,9 +131,12 @@ export default class BaseMap extends Phaser.Scene {
 					}
 
 					if (isMoving) {
-						this.playerObjects[key].sprite.play('PINK_BEAN_MOVING', true)
+						this.playerObjects[key].sprite.play(
+							spriteConfig.moving?.key || '',
+							true
+						)
 					} else {
-						this.playerObjects[key].sprite.play('PINK_BEAN_IDLE', true)
+						this.playerObjects[key].sprite.play(spriteConfig.idle.key, true)
 					}
 				} else {
 					this.playerObjects[key].container.destroy()
@@ -129,16 +144,16 @@ export default class BaseMap extends Phaser.Scene {
 				}
 			}
 
+			// Add new sprites
 			for (const key of Object.keys(this.playerStates)) {
 				if (!this.playerObjects[key]) {
 					const isLocalPlayer = key == this.io?.id
-					this.addPlayer(key, isLocalPlayer)
+					const { displayName, spriteType } = this.playerStates[key]
+					this.addPlayer(key, isLocalPlayer, displayName, spriteType)
 				}
 			}
 
 			this.playerStates = newPlayerState
 		})
 	}
-
-	update() {}
 }

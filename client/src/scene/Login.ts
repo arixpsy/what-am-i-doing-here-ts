@@ -58,6 +58,9 @@ export default class Login extends Phaser.Scene {
 	}
 
 	setupSocket() {
-		this.io?.on('join map', (mapKey: Map) => this.scene.start(mapKey))
+		this.io?.on('join map', (mapKey: Map) => {
+			if (this.scene.getStatus(mapKey) !== Phaser.Scenes.RUNNING)
+				this.scene.start(mapKey)
+		})
 	}
 }
