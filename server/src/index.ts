@@ -124,7 +124,8 @@ setInterval(() => {
       }
     }
 
-    io.to(mapKey).emit('update state', {
+    io.to([mapKey, 'debug']).emit('update state', {
+      map: mapKey,
       walls: MapEntities[mapKey].walls.map(toVertices),
       platforms: MapEntities[mapKey].platforms.map(toVertices),
       players,
@@ -156,6 +157,7 @@ io.on('connection', (socket) => {
     io.to(socket.id).emit('join map', mapKey)
     console.log(`🟢 User '${displayName}' has join ${mapKey}`)
   } else {
+    socket.join('debug')
     console.log(`🟢 A debugger has connected: ${socket.id}`)
   }
 
@@ -177,5 +179,5 @@ io.on('connection', (socket) => {
     MapEntities[mapKey].players[socket.id].command = data
   })
 
-  socket.on('register', (cb) => cb(FOREST_CONFIG.dimensions))
+  socket.on('register', (cb) => cb({ FOREST: FOREST_CONFIG.dimensions }))
 })

@@ -1,9 +1,23 @@
 <body>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
   <script>
-    const canvas = document.createElement('canvas')
-    document.body.appendChild(canvas)
-    const ctx = canvas.getContext('2d')
+    const map = {
+      FOREST: {
+        canvas: undefined,
+        ctx: undefined,
+      },
+      STREET: {
+        canvas: undefined,
+        ctx: undefined,
+      },
+    }
+
+    for (const key of Object.keys(map)) {
+      map[key].canvas = document.createElement('canvas')
+      document.body.appendChild(map[key].canvas)
+      map[key].ctx = map[key].canvas.getContext('2d')
+    }
+
     const socket = io()
 
     const draw = (body, ctx) => {
@@ -16,12 +30,16 @@
 
     socket.once('connect', () => {
       socket.emit('register', (res) => {
-        canvas.width = res.width
-        canvas.height = res.height
+        for (const key of Object.keys(res)) {
+          map[key].canvas.width = res[key].width
+          map[key].canvas.height = res[key].height
+        }
       })
     })
 
-    socket.on('update state', ({ platforms, walls, players }) => {
+    socket.on('update state', ({ platforms, walls, players, map: key }) => {
+      const canvas = map[key].canvas
+      const ctx = map[key].ctx
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       ctx.fillStyle = '#111'
       ctx.strokeStyle = '#111'
