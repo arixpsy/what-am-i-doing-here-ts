@@ -72,62 +72,64 @@ for (const MapKey of Object.values(Map)) {
 const frameRate = 1000 / 30
 
 setInterval(() => {
-  // TODO:
-  for (const key of Object.keys(MapEntities.FOREST.players)) {
-    const {
-      command,
-      body,
-      state: { isInAir },
-    } = MapEntities.FOREST.players[key]
-    if (command) {
-      if (command.jump && !isInAir) {
-        MapEntities.FOREST.players[key].state.isInAir = true
-        Matter.Body.applyForce(body, body.position, { x: 0, y: -0.03 })
-      }
+  for (const key in MapEngines) {
+    const mapKey = key as Map
+    for (const socketId of Object.keys(MapEntities[mapKey].players)) {
+      const {
+        command,
+        body,
+        state: { isInAir },
+      } = MapEntities[mapKey].players[socketId]
 
-      if (isInAir && parseFloat(body.velocity.y.toFixed(10)) === 0) {
-        MapEntities.FOREST.players[key].state.isInAir = false
-      }
+      if (command) {
+        if (command.jump && !isInAir) {
+          MapEntities[mapKey].players[socketId].state.isInAir = true
+          Matter.Body.applyForce(body, body.position, { x: 0, y: -0.03 })
+        }
 
-      const position = { ...body.position }
-      if (command.right && !command.left) {
-        position.x += 5
-        MapEntities.FOREST.players[key].state.isFacingRight = true
-        MapEntities.FOREST.players[key].state.isFacingLeft = false
-        MapEntities.FOREST.players[key].state.isMoving = true
-      } else if (!command.right && command.left) {
-        position.x -= 5
-        MapEntities.FOREST.players[key].state.isFacingRight = false
-        MapEntities.FOREST.players[key].state.isFacingLeft = true
-        MapEntities.FOREST.players[key].state.isMoving = true
-      } else if (
-        (!command.right && !command.left) ||
-        (command.right && command.left)
-      ) {
-        MapEntities.FOREST.players[key].state.isMoving = false
+        if (isInAir && parseFloat(body.velocity.y.toFixed(10)) === 0) {
+          MapEntities[mapKey].players[socketId].state.isInAir = false
+        }
+
+        const position = { ...body.position }
+        if (command.right && !command.left) {
+          position.x += 5
+          MapEntities[mapKey].players[socketId].state.isFacingRight = true
+          MapEntities[mapKey].players[socketId].state.isFacingLeft = false
+          MapEntities[mapKey].players[socketId].state.isMoving = true
+        } else if (!command.right && command.left) {
+          position.x -= 5
+          MapEntities[mapKey].players[socketId].state.isFacingRight = false
+          MapEntities[mapKey].players[socketId].state.isFacingLeft = true
+          MapEntities[mapKey].players[socketId].state.isMoving = true
+        } else if (
+          (!command.right && !command.left) ||
+          (command.right && command.left)
+        ) {
+          MapEntities[mapKey].players[socketId].state.isMoving = false
+        }
+        Matter.Body.setPosition(body, position)
       }
-      Matter.Body.setPosition(body, position)
     }
-  }
+    Matter.Engine.update(MapEngines[mapKey], frameRate)
 
-  Matter.Engine.update(MapEngines.FOREST, frameRate)
-
-  const players: UpdateStateBody = {}
-  for (const key of Object.keys(MapEntities.FOREST.players)) {
-    players[key] = {
-      vertices: toVertices(MapEntities.FOREST.players[key].body),
-      position: MapEntities.FOREST.players[key].body.position,
-      state: MapEntities.FOREST.players[key].state,
-      displayName: MapEntities.FOREST.players[key].displayName,
-      spriteType: MapEntities.FOREST.players[key].spriteType,
+    const players: UpdateStateBody = {}
+    for (const key of Object.keys(MapEntities[mapKey].players)) {
+      players[key] = {
+        vertices: toVertices(MapEntities[mapKey].players[key].body),
+        position: MapEntities[mapKey].players[key].body.position,
+        state: MapEntities[mapKey].players[key].state,
+        displayName: MapEntities[mapKey].players[key].displayName,
+        spriteType: MapEntities[mapKey].players[key].spriteType,
+      }
     }
-  }
 
-  io.emit('update state', {
-    walls: MapEntities.FOREST.walls.map(toVertices),
-    platforms: MapEntities.FOREST.platforms.map(toVertices),
-    players,
-  })
+    io.to(mapKey).emit('update state', {
+      walls: MapEntities[mapKey].walls.map(toVertices),
+      platforms: MapEntities[mapKey].platforms.map(toVertices),
+      players,
+    })
+  }
 }, frameRate)
 
 io.on('connection', (socket) => {
