@@ -1,7 +1,8 @@
 import Phaser from 'phaser'
 import { Socket } from 'socket.io-client'
-import { SceneKey } from '../@types/scene'
 import { ImageKey } from '../@types/image'
+import { SceneKey } from '../@types/scene'
+import { SoundKey } from '../@types/sound'
 import loginForm from './../assets/html/loginForm.html?raw'
 import SpriteData from '../utils/constants/sprite'
 import { Map } from '../../../server/src/@types/map'
@@ -19,8 +20,22 @@ export default class Login extends Phaser.Scene {
 
 	create() {
 		this.setupSocket()
+		this.setupSceneListener()
+		this.loadSound()
 		this.loadBackground()
 		this.loadForm()
+	}
+
+	loadSound() {
+		const soundManager = this.sound
+
+		if (!soundManager.get(SoundKey.LOGIN)) {
+			soundManager.add(SoundKey.LOGIN, {
+				loop: true,
+			})
+		}
+
+		soundManager.play(SoundKey.LOGIN)
 	}
 
 	loadBackground() {
@@ -57,10 +72,17 @@ export default class Login extends Phaser.Scene {
 		})
 	}
 
+	setupSceneListener() {
+		this.events.addListener('shutdown', () => {
+			this.sound.stopByKey(SoundKey.LOGIN)
+		})
+	}
+
 	setupSocket() {
 		this.io?.on('join map', (mapKey: Map) => {
-			if (this.scene.getStatus(mapKey) !== Phaser.Scenes.RUNNING)
+			if (this.scene.getStatus(mapKey) !== Phaser.Scenes.RUNNING) {
 				this.scene.start(mapKey)
+			}
 		})
 	}
 }
