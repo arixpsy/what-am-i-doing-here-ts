@@ -1,4 +1,4 @@
-<div
+<form
 	class="flex h-[500px] w-[350px] flex-col items-center justify-center gap-5 bg-white p-8"
 >
 	<h1 class="text-center text-4xl font-bold">What am I doing here</h1>
@@ -11,6 +11,7 @@
 			id="display-name-input"
 			type="text"
 			maxlength="20"
+			autocomplete="off"
 		/>
 	</div>
 
@@ -25,7 +26,8 @@
 	<button
 		id="enter-btn"
 		class="w-full cursor-pointer rounded-md bg-[#4F46E5] py-2 font-bold text-white hover:bg-[#181196]"
+		type="submit"
 	>
 		Enter
 	</button>
-</div>
+</form>
