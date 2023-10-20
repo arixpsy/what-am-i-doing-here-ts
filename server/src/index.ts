@@ -45,7 +45,6 @@ app.get('/healthcheck', (_, res) => {
 
 server.listen(port, () => {
   console.log(`🟢 ${env} server is running on port ${port}`)
-  // socket(io)
 })
 
 const MapEngines: Record<Map, Matter.Engine> = {
@@ -101,7 +100,10 @@ setInterval(() => {
         MapEntities.FOREST.players[key].state.isFacingRight = false
         MapEntities.FOREST.players[key].state.isFacingLeft = true
         MapEntities.FOREST.players[key].state.isMoving = true
-      } else if (!command.right && !command.left) {
+      } else if (
+        (!command.right && !command.left) ||
+        (command.right && command.left)
+      ) {
         MapEntities.FOREST.players[key].state.isMoving = false
       }
       Matter.Body.setPosition(body, position)

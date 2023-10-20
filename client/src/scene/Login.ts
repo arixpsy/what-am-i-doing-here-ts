@@ -30,12 +30,10 @@ export default class Login extends Phaser.Scene {
 		const soundManager = this.sound
 
 		if (!soundManager.get(SoundKey.LOGIN)) {
-			soundManager.add(SoundKey.LOGIN, {
-				loop: true,
-			})
+			soundManager.add(SoundKey.LOGIN)
 		}
 
-		soundManager.play(SoundKey.LOGIN)
+		soundManager.play(SoundKey.LOGIN, { loop: true })
 	}
 
 	loadBackground() {

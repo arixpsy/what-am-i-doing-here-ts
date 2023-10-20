@@ -98,12 +98,12 @@ export default class BaseMap extends Phaser.Scene {
 		}
 
 		if (!soundManager.get(this.backgroundSoundKey)) {
-			soundManager.add(this.backgroundSoundKey, {
-				loop: true,
-			})
+			soundManager.add(this.backgroundSoundKey)
 		}
 
-		soundManager.play(this.backgroundSoundKey)
+		soundManager.play(this.backgroundSoundKey, {
+			loop: true,
+		})
 	}
 
 	setupSocket() {
