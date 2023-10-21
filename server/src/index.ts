@@ -3,7 +3,7 @@ import 'dotenv/config'
 import express from 'express'
 import http from 'http'
 import Matter from 'matter-js'
-import { Server } from 'socket.io'
+import { Server, Socket } from 'socket.io'
 import { Environment } from './@types/index.js'
 import type { MapEntities, UpdateStateBody } from './@types/game.js'
 import { Map } from './@types/map.js'
@@ -16,6 +16,7 @@ import {
   toVertices,
   generatePlatforms,
   generateWalls,
+  generatePortals,
 } from './utils/functions/matter.js'
 
 const port = Env.PORT
@@ -57,11 +58,13 @@ const MapEntities: Record<Map, MapEntities> = (() => {
     FOREST: {
       walls: generateWalls(FOREST.dimensions),
       platforms: generatePlatforms(FOREST.platform),
+      portals: generatePortals(FOREST.portals),
       players: {},
     },
     STREET: {
       walls: generateWalls(STREET.dimensions),
       platforms: generatePlatforms(STREET.platform),
+      portals: generatePortals(STREET.portals),
       players: {},
     },
   }
@@ -71,7 +74,8 @@ for (const MapKey of Object.values(Map)) {
   const engine = MapEngines[MapKey].world
   const walls = MapEntities[MapKey].walls
   const platforms = MapEntities[MapKey].platforms
-  Matter.Composite.add(engine, [...walls, ...platforms])
+  const portals = Object.values(MapEntities[MapKey].portals)
+  Matter.Composite.add(engine, [...walls, ...platforms, ...portals])
 }
 
 const frameRate = 1000 / 30
@@ -83,10 +87,10 @@ setInterval(() => {
       const {
         command,
         body,
-        state: { isInAir },
+        state: { isInAir, isEnteringPortal },
       } = MapEntities[mapKey].players[socketId]
 
-      if (command) {
+      if (command && !isEnteringPortal) {
         if (command.jump && !isInAir) {
           MapEntities[mapKey].players[socketId].state.isInAir = true
           Matter.Body.applyForce(body, body.position, { x: 0, y: -0.03 })
@@ -133,34 +137,46 @@ setInterval(() => {
       map: mapKey,
       walls: MapEntities[mapKey].walls.map(toVertices),
       platforms: MapEntities[mapKey].platforms.map(toVertices),
+      portals: Object.values(MapEntities[mapKey].portals).map(toVertices),
       players,
     })
   }
 }, frameRate)
 
+function AddPlayer(
+  io: Server,
+  socket: Socket,
+  socketId: string,
+  mapKey: Map,
+  portalKey: number,
+  spriteType: Sprite,
+  displayName: string
+) {
+  MapEntities[mapKey].players[socketId] = createPlayer(
+    spriteType,
+    displayName,
+    mapKey,
+    portalKey
+  )
+  Matter.Composite.add(
+    MapEngines[mapKey].world,
+    MapEntities[mapKey].players[socketId].body
+  )
+  socket.join(mapKey)
+  io.to(socket.id).emit('join map', mapKey)
+  console.log(`🟢 User '${displayName}' has join ${mapKey}`)
+}
+
 io.on('connection', (socket) => {
   const displayName = socket.handshake.auth.displayName
   const spriteType = socket.handshake.auth.spriteType as Sprite
   const isPlayer = displayName && spriteType
-  let mapKey = Map.FOREST
+  let mapKey: Map = Map.FOREST
   let portalKey = 0
 
   if (isPlayer) {
     console.log(`🟢 User '${displayName}' has connected`)
-    MapEntities[mapKey].players[socket.id] = createPlayer(
-      spriteType,
-      displayName,
-      mapKey
-    )
-    MapEntities[mapKey].players[socket.id].body.collisionFilter.group = -1
-    MapEntities[mapKey].players[socket.id].body.friction = 0
-    Matter.Composite.add(
-      MapEngines[mapKey].world,
-      MapEntities[mapKey].players[socket.id].body
-    )
-    socket.join(mapKey)
-    io.to(socket.id).emit('join map', mapKey)
-    console.log(`🟢 User '${displayName}' has join ${mapKey}`)
+    AddPlayer(io, socket, socket.id, mapKey, portalKey, spriteType, displayName)
   } else {
     socket.join('debug')
     console.log(`🟢 A debugger has connected: ${socket.id}`)
@@ -178,6 +194,45 @@ io.on('connection', (socket) => {
       MapEntities[mapKey].players[socket.id].body
     )
     delete MapEntities[mapKey].players[socket.id]
+  })
+
+  socket.on('enter portal', (callback) => {
+    const { state, body } = MapEntities[mapKey].players[socket.id]
+    if (!state.isEnteringPortal) {
+      for (const key of Object.keys(MapEntities[mapKey].portals)) {
+        const pKey = key as unknown as number
+        const { portals } = MapEntities[mapKey]
+        const { x, y } = portals[pKey].position
+        if (
+          body.position.x >= x - 25 &&
+          body.position.x <= x + 25 &&
+          body.position.y >= y - 50 &&
+          body.position.y <= y + 50
+        ) {
+          callback('entering portal')
+          MapEntities[mapKey].players[socket.id].state.isEnteringPortal = true
+          const newMapKey = MAP_CONFIG[mapKey].portals[pKey].mapKey
+          const newPortalKey = MAP_CONFIG[mapKey].portals[pKey].portal
+          socket.leave(mapKey)
+          AddPlayer(
+            io,
+            socket,
+            socket.id,
+            newMapKey,
+            newPortalKey,
+            spriteType,
+            displayName
+          )
+          Matter.Composite.remove(
+            MapEngines[mapKey].world,
+            MapEntities[mapKey].players[socket.id].body
+          )
+          delete MapEntities[mapKey].players[socket.id]
+          mapKey = MAP_CONFIG[mapKey].portals[pKey].mapKey
+          portalKey = MAP_CONFIG[mapKey].portals[pKey].portal
+        }
+      }
+    }
   })
 
   socket.on('userCommands', function (data) {

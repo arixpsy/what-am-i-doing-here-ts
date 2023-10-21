@@ -7,6 +7,11 @@ export const Map = {
 
 export type Map = (typeof Map)[keyof typeof Map]
 
+export type portalConfig = Coordinates & {
+  mapKey: Map
+  portal: number
+}
+
 export type MapConfig = {
   key: Map
   dimensions: Dimensions
@@ -17,4 +22,5 @@ export type MapConfig = {
     }
   >
   spawn: Coordinates
+  portals: Record<number, portalConfig>
 }

@@ -8,6 +8,7 @@ export type PlayerState = {
   isMoving: boolean
   isFacingLeft: boolean
   isFacingRight: boolean
+  isEnteringPortal: boolean
 }
 
 export type Player = {
@@ -21,6 +22,7 @@ export type Player = {
 export type MapEntities = {
   walls: Array<Matter.Body>
   platforms: Array<Matter.Body>
+  portals: Record<number, Matter.Body>
   players: Record<string, Player>
 }
 

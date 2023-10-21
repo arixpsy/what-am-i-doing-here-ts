@@ -1,4 +1,5 @@
 import Matter from 'matter-js'
+import type { portalConfig } from '../../@types/map.js'
 
 export const generateWalls = ({
   height,
@@ -24,6 +25,21 @@ export const generatePlatforms = (
   platforms.map(({ height, width, x, y }) =>
     Matter.Bodies.rectangle(x, y, width, height, { isStatic: true })
   )
+
+export const generatePortals = (portals: Record<number, portalConfig>) => {
+  const portalBodies: Record<number, Matter.Body> = {}
+  for (const key of Object.keys(portals)) {
+    const { x, y } = portals[key as unknown as number]
+    portalBodies[key as unknown as number] = Matter.Bodies.rectangle(
+      x,
+      y,
+      50,
+      100,
+      { isStatic: true, collisionFilter: { group: -1 } }
+    )
+  }
+  return portalBodies
+}
 
 export const toVertices = (e: Matter.Body) =>
   e.vertices.map(({ x, y }) => ({ x, y }))

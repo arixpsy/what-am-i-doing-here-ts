@@ -18,5 +18,12 @@ export const FOREST_CONFIG = {
     x: 512,
     y: 300,
   },
-} satisfies MapConfig 
-
+  portals: {
+    1: {
+      x: 940,
+      y: 460,
+      mapKey: Map.STREET,
+      portal: 1,
+    },
+  },
+} satisfies MapConfig

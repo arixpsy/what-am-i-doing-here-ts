@@ -8,15 +8,22 @@ export const STREET_CONFIG = {
   },
   platform: [
     {
-      height: 184,
+      height: 86,
       width: 1234,
       x: 617, // 1234 / 2
-      y: 546, // (638 - 184) + (184 / 2)
+      y: 595, // (638 - 86) + (86 / 2)
     },
   ],
   spawn: {
     x: 512,
     y: 300,
   },
-} satisfies MapConfig 
-
+  portals: {
+    1: {
+      x: 1150,
+      y: 502,
+      mapKey: Map.FOREST,
+      portal: 1,
+    },
+  },
+} satisfies MapConfig

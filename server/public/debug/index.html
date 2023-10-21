@@ -37,7 +37,7 @@
       })
     })
 
-    socket.on('update state', ({ platforms, walls, players, map: key }) => {
+    socket.on('update state', ({ platforms, walls, players, map: key, portals }) => {
       const canvas = map[key].canvas
       const ctx = map[key].ctx
 
@@ -51,6 +51,9 @@
 
       ctx.fillStyle = 'rgba(0, 0, 255, 0.2)'
       Object.values(players).forEach((p) => draw(p.vertices, ctx))
+
+      ctx.fillStyle = 'rgba(0, 255, 0, 0.2)'
+      portals.forEach((p) => draw(p, ctx))
 
       ctx.font = "30px monospace"
       ctx.fillStyle = 'rgba(0, 0, 0, 1)'
