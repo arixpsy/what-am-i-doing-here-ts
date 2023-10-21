@@ -3,6 +3,7 @@ import { Socket } from 'socket.io-client'
 import { PlayerObject } from '../@types'
 import { ImageKey } from '../@types/image'
 import { SoundKey } from '../@types/sound'
+import { Coordinates } from '../../../server/src/@types'
 import { UpdateStateBody } from '../../../server/src/@types/game'
 import { MapConfig, Map } from '../../../server/src/@types/map'
 import { Sprite } from '../../../server/src/@types/sprite'
@@ -55,9 +56,9 @@ export default class BaseMap extends Phaser.Scene {
 		id: string,
 		isLocalPlayer: boolean,
 		displayName: string,
-		spriteType: Sprite
+		spriteType: Sprite,
+		position: Coordinates
 	) {
-		const { x: spawnX, y: spawnY } = this.config.spawn
 		const spriteConfig = SpriteData[spriteType]
 
 		let sprite = this.add.sprite(0, 15, spriteConfig.idle.key)
@@ -72,7 +73,7 @@ export default class BaseMap extends Phaser.Scene {
 		nameLabel.setOrigin(0.5, 0)
 		nameLabel.setY(20)
 		let container = this.add
-			.container(spawnX, spawnY, [sprite, nameLabel])
+			.container(position.x, position.y, [sprite, nameLabel])
 			.setSize(30, 30)
 
 		sprite.setOrigin(0.5, 1)
@@ -167,8 +168,8 @@ export default class BaseMap extends Phaser.Scene {
 				for (const key of Object.keys(this.playerStates)) {
 					if (!this.playerObjects[key]) {
 						const isLocalPlayer = key == this.io?.id
-						const { displayName, spriteType } = this.playerStates[key]
-						this.addPlayer(key, isLocalPlayer, displayName, spriteType)
+						const { displayName, spriteType, position } = this.playerStates[key]
+						this.addPlayer(key, isLocalPlayer, displayName, spriteType, position)
 					}
 				}
 
