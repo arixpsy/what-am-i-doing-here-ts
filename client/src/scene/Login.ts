@@ -71,9 +71,7 @@ export default class Login extends Phaser.Scene {
 	}
 
 	setupSceneListener() {
-		this.events.addListener('shutdown', () => {
-			this.sound.stopByKey(SoundKey.LOGIN)
-		})
+		this.events.addListener('shutdown', () => this.unmount())
 	}
 
 	setupSocket() {
@@ -82,5 +80,10 @@ export default class Login extends Phaser.Scene {
 				this.scene.start(mapKey)
 			}
 		})
+	}
+
+	unmount() {
+		this.sound.stopByKey(SoundKey.LOGIN)
+		this.io?.removeAllListeners('join map')
 	}
 }

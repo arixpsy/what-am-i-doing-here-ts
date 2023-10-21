@@ -4,7 +4,7 @@ import { PlayerObject } from '../@types'
 import { ImageKey } from '../@types/image'
 import { SoundKey } from '../@types/sound'
 import { UpdateStateBody } from '../../../server/src/@types/game'
-import { MapConfig } from '../../../server/src/@types/map'
+import { MapConfig, Map } from '../../../server/src/@types/map'
 import { Sprite } from '../../../server/src/@types/sprite'
 import { InputController } from '../utils/inputController'
 import SpriteData from '../utils/constants/sprite'
@@ -29,8 +29,17 @@ export default class BaseMap extends Phaser.Scene {
 	}
 
 	init() {
-		this.io = this.game.registry.get('socket')
-		new InputController(this, this.io)
+		this.io = this.game.registry.get('socket') as Socket
+		new InputController(this, this.io, {
+			up: async () => {
+				try {
+					await this.io?.emitWithAck('enter portal')
+					this.sound.play(SoundKey.PORTAL)
+				} catch (err) {
+					console.log(err)
+				}
+			},
+		})
 	}
 
 	preload() {}
@@ -39,6 +48,7 @@ export default class BaseMap extends Phaser.Scene {
 		this.loadMap()
 		this.loadSound()
 		this.setupSocket()
+		this.setupSceneListener()
 	}
 
 	addPlayer(
@@ -75,7 +85,12 @@ export default class BaseMap extends Phaser.Scene {
 		}
 
 		if (isLocalPlayer) {
-			this.cameras.main.setBounds(0, 0, 1024, 560)
+			this.cameras.main.setBounds(
+				0,
+				0,
+				this.config.dimensions.width,
+				this.config.dimensions.height
+			)
 			this.cameras.main.startFollow(container, true)
 		}
 	}
@@ -104,54 +119,75 @@ export default class BaseMap extends Phaser.Scene {
 		})
 	}
 
+	setupSceneListener() {
+		this.events.addListener('shutdown', () => this.unmount())
+	}
+
 	setupSocket() {
-		this.io?.on('update state', (data: { players: UpdateStateBody }) => {
-			const newPlayerState = data.players
+		this.io?.on(
+			'update state',
+			(data: { players: UpdateStateBody; map: string }) => {
+				if (data.map !== this.config.key) return
+				const newPlayerState = data.players
+				// Update state for existing player sprites
+				for (const key of Object.keys(this.playerObjects)) {
+					if (this.playerStates[key]) {
+						const spriteConfig = SpriteData[this.playerStates[key].spriteType]
 
-			// Update state for existing player sprites
-			for (const key of Object.keys(this.playerObjects)) {
-				if (this.playerStates[key]) {
-					const spriteConfig = SpriteData[this.playerStates[key].spriteType]
-
-					this.playerObjects[key].container.setX(
-						this.playerStates[key].position.x
-					)
-					this.playerObjects[key].container.setY(
-						this.playerStates[key].position.y + 5
-					)
-
-					const { isFacingLeft, isFacingRight, isMoving } =
-						this.playerStates[key].state
-					if (isFacingLeft) {
-						this.playerObjects[key].sprite.flipX = false
-					} else if (isFacingRight) {
-						this.playerObjects[key].sprite.flipX = true
-					}
-
-					if (isMoving) {
-						this.playerObjects[key].sprite.play(
-							spriteConfig.moving?.key || '',
-							true
+						this.playerObjects[key].container.setX(
+							this.playerStates[key].position.x
 						)
+						this.playerObjects[key].container.setY(
+							this.playerStates[key].position.y + 5
+						)
+
+						const { isFacingLeft, isFacingRight, isMoving } =
+							this.playerStates[key].state
+						if (isFacingLeft) {
+							this.playerObjects[key].sprite.flipX = false
+						} else if (isFacingRight) {
+							this.playerObjects[key].sprite.flipX = true
+						}
+
+						if (isMoving) {
+							this.playerObjects[key].sprite.play(
+								spriteConfig.moving?.key || '',
+								true
+							)
+						} else {
+							this.playerObjects[key].sprite.play(spriteConfig.idle.key, true)
+						}
 					} else {
-						this.playerObjects[key].sprite.play(spriteConfig.idle.key, true)
+						this.playerObjects[key].container.destroy()
+						delete this.playerObjects[key]
 					}
-				} else {
-					this.playerObjects[key].container.destroy()
-					delete this.playerObjects[key]
 				}
-			}
 
-			// Add new sprites
-			for (const key of Object.keys(this.playerStates)) {
-				if (!this.playerObjects[key]) {
-					const isLocalPlayer = key == this.io?.id
-					const { displayName, spriteType } = this.playerStates[key]
-					this.addPlayer(key, isLocalPlayer, displayName, spriteType)
+				// Add new sprites
+				for (const key of Object.keys(this.playerStates)) {
+					if (!this.playerObjects[key]) {
+						const isLocalPlayer = key == this.io?.id
+						const { displayName, spriteType } = this.playerStates[key]
+						this.addPlayer(key, isLocalPlayer, displayName, spriteType)
+					}
 				}
-			}
 
-			this.playerStates = newPlayerState
+				this.playerStates = newPlayerState
+			}
+		)
+
+		this.io?.on('join map', (mapKey: Map) => {
+			if (this.scene.getStatus(mapKey) !== Phaser.Scenes.RUNNING) {
+				this.scene.start(mapKey)
+			}
 		})
+	}
+
+	unmount() {
+		this.sound.stopByKey(this.backgroundSoundKey)
+		this.io?.removeAllListeners('update state')
+		this.io?.removeAllListeners('join map')
+		this.playerStates = {}
+		this.playerObjects = {}
 	}
 }

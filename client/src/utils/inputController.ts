@@ -21,7 +21,11 @@ export class InputController {
 	}
 	private justPressed = false
 
-	constructor(scene: Phaser.Scene, io?: Socket) {
+	constructor(
+		scene: Phaser.Scene,
+		io: Socket,
+		extendedActions: Partial<Record<Command, () => void>>
+	) {
 		this.io = io
 
 		for (const c in this.input) {
@@ -37,6 +41,12 @@ export class InputController {
 
 				if (this.justPressed === true) {
 					this.emitInput()
+
+					const extendedAction = extendedActions[command]
+					if (extendedAction) {
+						extendedAction()
+					}
+
 					this.justPressed = false
 				}
 			})
