@@ -54,7 +54,8 @@ export default class Login extends Phaser.Scene {
 		) as HTMLInputElement
 
 		for (const sprite of Object.values(SpriteData)) {
-			spriteInput.innerHTML += `<option value='${sprite.key}'>${sprite.label}</option>`
+			if (sprite.key !== SpriteData.PORTAL.key)
+				spriteInput.innerHTML += `<option value='${sprite.key}'>${sprite.label}</option>`
 		}
 
 		form.on('submit', (event: any) => {

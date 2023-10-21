@@ -48,6 +48,7 @@ export default class BaseMap extends Phaser.Scene {
 	create() {
 		this.loadMap()
 		this.loadSound()
+		this.loadPortal()
 		this.setupSocket()
 		this.setupSceneListener()
 	}
@@ -120,6 +121,20 @@ export default class BaseMap extends Phaser.Scene {
 		})
 	}
 
+	loadPortal() {
+		for (const key of Object.keys(this.config.portals)) {
+			const portalKey = key as unknown as number
+			const portal = this.config.portals[portalKey]
+			const newPortal = this.add.sprite(
+				portal.x,
+				portal.y + 50,
+				SpriteData.PORTAL.idle.key
+			)
+			newPortal.play(SpriteData.PORTAL.idle.key)
+			newPortal.setOrigin(0.5, 1)
+		}
+	}
+
 	setupSceneListener() {
 		this.events.addListener('shutdown', () => this.unmount())
 	}
@@ -169,7 +184,13 @@ export default class BaseMap extends Phaser.Scene {
 					if (!this.playerObjects[key]) {
 						const isLocalPlayer = key == this.io?.id
 						const { displayName, spriteType, position } = this.playerStates[key]
-						this.addPlayer(key, isLocalPlayer, displayName, spriteType, position)
+						this.addPlayer(
+							key,
+							isLocalPlayer,
+							displayName,
+							spriteType,
+							position
+						)
 					}
 				}
 

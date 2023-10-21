@@ -2,6 +2,7 @@ import { Dimensions } from './../../../../server/src/@types'
 import { Sprite } from './../../../../server/src/@types/sprite'
 import pinkBeanIdle from './../../assets/sprites/pinkBean/pink-bean-idle.png'
 import pinkBeanMoving from './../../assets/sprites/pinkBean/pink-bean-moving.png'
+import portalIdle from './../../assets/sprites/portal/portal.png'
 
 type SpriteSheet = {
 	spriteSheet: string
@@ -14,7 +15,7 @@ type SpriteData = {
 	idle: SpriteSheet
 	moving?: SpriteSheet
 	key: Sprite
-	label: string,
+	label: string
 }
 
 const SpriteData: Record<Sprite, SpriteData> = {
@@ -34,7 +35,20 @@ const SpriteData: Record<Sprite, SpriteData> = {
 			framerate: 7,
 		},
 		key: Sprite.PINK_BEAN,
-		label: 'Pink Bean'
+		label: 'Pink Bean',
+	},
+	[Sprite.PORTAL]: {
+		dimensions: {
+			height: 122,
+			width: 127,
+		},
+		idle: {
+			spriteSheet: portalIdle,
+			key: 'PORTAL_IDLE',
+			framerate: 6,
+		},
+		key: Sprite.PORTAL,
+		label: 'Portal'
 	},
 }
 
