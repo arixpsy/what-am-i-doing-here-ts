@@ -62,6 +62,11 @@ export default class Login extends Phaser.Scene {
 			event.preventDefault()
 			if (!this.io) return
 
+			if (!displayNameInput.value) {
+				alert('Enter a display name')
+				return
+			}
+
 			this.io.auth = {
 				displayName: displayNameInput.value,
 				spriteType: spriteInput.value,
