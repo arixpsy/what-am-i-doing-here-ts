@@ -90,8 +90,15 @@ const setupSocket = (
       }
     })
 
-    socket.on('userCommands', function (data: Record<Command, boolean>) {
+    socket.on('userCommands', (data: Record<Command, boolean>) => {
       MapEntities[mapKey].players[socket.id].command = data
+    })
+
+    socket.on('send message', (message: string) => {
+      io.to(mapKey).emit('chat message', {
+        message,
+        playerId: socket.id,
+      })
     })
 
     socket.on('register', (cb) =>
