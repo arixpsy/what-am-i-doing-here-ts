@@ -1,7 +1,7 @@
-import Matter from 'matter-js'
 import { type Player } from './../../@types/game.js'
 import { type Map } from './../../@types/map.js'
 import { Sprite } from '../../@types/sprite.js'
+import { generateSprite } from './matter.js'
 import { MAP_CONFIG } from './../../utils/constants/maps/index.js'
 
 export const createPlayer = (
@@ -35,13 +35,6 @@ export const createPlayer = (
       isMoving: false,
       isEnteringPortal: false,
     },
-    // TODO: shift to function folder matter.ts
-    body: Matter.Bodies.rectangle(spawnX, spawnY, 50, 50, {
-      friction: 0,
-      inertia: Infinity,
-      collisionFilter: {
-        group: -1,
-      },
-    }),
+    body: generateSprite({ x: spawnX, y: spawnY }),
   }
 }
