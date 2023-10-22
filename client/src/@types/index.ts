@@ -4,4 +4,5 @@ export type PlayerObject = {
 	sprite: Phaser.GameObjects.Sprite
 	container: Phaser.GameObjects.Container
 	nameLabel: Phaser.GameObjects.Text
+	chatBubble?: Phaser.GameObjects.Text
 }

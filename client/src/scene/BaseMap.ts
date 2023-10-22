@@ -172,7 +172,53 @@ export default class BaseMap extends Phaser.Scene {
 			})
 	}
 
-	addMessageToContainer(displayName: string, message: string) {
+	createMessageBubble(playerId: string, message: string) {
+		const player = this.playerObjects[playerId]
+		if (!player) return
+		if (player.chatBubble) {
+			this.playerObjects[playerId].chatBubble?.destroy()
+			delete this.playerObjects[playerId].chatBubble
+		}
+
+		const displayName = this.playerStates[playerId].displayName
+		const messageBubble = this.add.text(0, -35, `${displayName}: ${message}`, {
+			fontFamily: 'monospace',
+			fontSize: '10px',
+			backgroundColor: '#FFF',
+			color: '#000',
+			padding: {
+				x: 5,
+				y: 2,
+			},
+			wordWrap: {
+				width: 80,
+				useAdvancedWrap: true,
+			},
+		})
+
+		messageBubble.setOrigin(0.5, 1)
+		this.playerObjects[playerId].container.add(messageBubble)
+		this.playerObjects[playerId].chatBubble = messageBubble
+
+		this.time.delayedCall(
+			5000,
+			(playerId: string, oldMessageBubble: Phaser.GameObjects.Text) => {
+				const player = this.playerObjects[playerId]
+				if (!player) return
+				const { container } = player
+				if (container.exists(oldMessageBubble)) {
+					this.playerObjects[playerId].chatBubble?.destroy()
+					delete this.playerObjects[playerId].chatBubble
+				}
+			},
+			[playerId, messageBubble]
+		)
+	}
+
+	addMessageToContainer(playerId: string, message: string) {
+		const player = this.playerStates[playerId]
+		if (!player) return
+		const displayName = player.displayName
 		const messageContainer = document.getElementById('message-container')!
 		messageContainer.innerText += displayName + ': ' + message
 		messageContainer.innerHTML += '<br />'
@@ -251,7 +297,8 @@ export default class BaseMap extends Phaser.Scene {
 		this.io?.on(
 			'chat message',
 			(data: { message: string; playerId: string }) => {
-				this.addMessageToContainer(this.playerStates[data.playerId].displayName, data.message)
+				this.createMessageBubble(data.playerId, data.message)
+				this.addMessageToContainer(data.playerId, data.message)
 			}
 		)
 
@@ -264,6 +311,8 @@ export default class BaseMap extends Phaser.Scene {
 		this.sound.stopByKey(this.backgroundSoundKey)
 		this.io?.removeAllListeners('update state')
 		this.io?.removeAllListeners('join map')
+		this.io?.removeAllListeners('chat message')
+		this.io?.removeAllListeners('jump')
 		this.playerStates = {}
 		this.playerObjects = {}
 	}
