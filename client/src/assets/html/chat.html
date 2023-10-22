@@ -1,0 +1,79 @@
+<style>
+	.chat-container {
+		display: grid;
+		width: 325px;
+		background-color: rgba(0, 0, 0, 0.5);
+		padding: 0.3rem 0.3rem;
+		grid-template-rows: 1fr auto;
+		gap: 0.3rem;
+		border-radius: 5px;
+		box-shadow:
+			0 0 0 1px rgba(255, 255, 255, 0.3),
+			0 0 0 2px rgba(0, 0, 0, 0.5);
+	}
+	.new-message-container {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		gap: 0.4rem;
+		pointer-events: none;
+	}
+	.new-message-container > * {
+		background-color: rgba(0, 0, 0, 0.5);
+		outline: none;
+		border: none;
+		border-radius: 5px;
+		color: white;
+		font-size: 0.8rem;
+		box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+	}
+	.new-message-container > input {
+		padding: 0 0.5rem;
+	}
+	.message-container {
+		line-height: 0.8rem;
+		color: white;
+		height: 50px;
+		font-size: 0.8rem;
+		overflow-y: auto;
+		overflow-x: clip;
+	}
+	/* width */
+	::-webkit-scrollbar {
+		width: 5px;
+	}
+
+	/* Track */
+	::-webkit-scrollbar-track {
+		background: #f1f1f1;
+		border-radius: 100vh;
+	}
+
+	/* Handle */
+	::-webkit-scrollbar-thumb {
+		background: #888;
+		border-radius: 100vh;
+	}
+
+	::-webkit-scrollbar-thumb:hover {
+		cursor: pointer;
+	}
+	.new-message-container > button {
+		font-size: 0.5rem;
+		display: flex;
+		align-items: center;
+		font-weight: bold;
+		padding: 0.4rem 0.5rem;
+	}
+</style>
+<div class="chat-container">
+	<div class="message-container" id="message-container"></div>
+	<div class="new-message-container">
+		<input
+			type="text"
+			id="new-message-input"
+			maxlength="250"
+			autocomplete="off"
+		/>
+		<button><p>Enter ⤵</p></button>
+	</div>
+</div>

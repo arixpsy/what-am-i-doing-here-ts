@@ -9,12 +9,14 @@ import { MapConfig, Map } from '../../../server/src/@types/map'
 import { Sprite } from '../../../server/src/@types/sprite'
 import { InputController } from '../utils/inputController'
 import SpriteData from '../utils/constants/sprite'
+import chatUI from './../assets/html/chat.html?raw'
 
 export default class BaseMap extends Phaser.Scene {
 	private io: Socket | undefined
 	private config: MapConfig
 	private backgroundImageKey: ImageKey
 	private backgroundSoundKey: SoundKey
+	private inputController?: InputController
 	private playerStates: UpdateStateBody = {}
 	private playerObjects: Record<string, PlayerObject> = {}
 
@@ -31,7 +33,7 @@ export default class BaseMap extends Phaser.Scene {
 
 	init() {
 		this.io = this.game.registry.get('socket') as Socket
-		new InputController(this, this.io, {
+		this.inputController = new InputController(this, this.io, {
 			up: async () => {
 				try {
 					await this.io?.emitWithAck('enter portal')
@@ -39,7 +41,7 @@ export default class BaseMap extends Phaser.Scene {
 				} catch (err) {
 					console.log(err)
 				}
-			}
+			},
 		})
 	}
 
@@ -50,6 +52,7 @@ export default class BaseMap extends Phaser.Scene {
 		this.loadMap()
 		this.loadSound()
 		this.loadPortal()
+		this.loadChatUI()
 		this.setupSocket()
 		this.setupSceneListener()
 	}
@@ -137,6 +140,45 @@ export default class BaseMap extends Phaser.Scene {
 		}
 	}
 
+	loadChatUI() {
+		const chatUIElement = this.add.dom(0, 0).createFromHTML(chatUI)
+		chatUIElement.setOrigin(0, 1)
+		chatUIElement.setY(500)
+		chatUIElement.setScrollFactor(0)
+		chatUIElement.setScale(1)
+
+		const enterKey = this.input.keyboard?.addKey(
+			Phaser.Input.Keyboard.KeyCodes.ENTER
+		)
+
+		enterKey &&
+			enterKey.on('down', () => {
+				const newMessageInput = document.getElementById(
+					'new-message-input'
+				) as HTMLInputElement
+				const isFocused = document.activeElement === newMessageInput
+				if (isFocused) {
+					const message = newMessageInput.value.trim()
+					if (message !== '') {
+						this.io?.emit('send message', message)
+					}
+					newMessageInput.value = ''
+					newMessageInput.blur()
+					this.inputController?.enableKeyCapture()
+				} else {
+					newMessageInput.focus()
+					this.inputController?.disableKeyCapture()
+				}
+			})
+	}
+
+	addMessageToContainer(displayName: string, message: string) {
+		const messageContainer = document.getElementById('message-container')!
+		messageContainer.innerText += displayName + ': ' + message
+		messageContainer.innerHTML += '<br />'
+		messageContainer.scrollTop = messageContainer.scrollHeight
+	}
+
 	setupSceneListener() {
 		this.events.addListener('shutdown', () => this.unmount())
 	}
@@ -205,6 +247,13 @@ export default class BaseMap extends Phaser.Scene {
 				this.scene.start(mapKey)
 			}
 		})
+
+		this.io?.on(
+			'chat message',
+			(data: { message: string; playerId: string }) => {
+				this.addMessageToContainer(this.playerStates[data.playerId].displayName, data.message)
+			}
+		)
 
 		this.io?.on('jump', () => {
 			this.sound.play(SoundKey.JUMP)
