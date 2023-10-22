@@ -46,6 +46,7 @@ export default class BaseMap extends Phaser.Scene {
 	preload() {}
 
 	create() {
+		this.cameras.main.fadeOut(0, 0, 0, 0)
 		this.loadMap()
 		this.loadSound()
 		this.loadPortal()
@@ -87,6 +88,7 @@ export default class BaseMap extends Phaser.Scene {
 		}
 
 		if (isLocalPlayer) {
+			this.cameras.main.fadeIn(750, 0, 0, 0)
 			this.cameras.main.setBounds(
 				0,
 				0,
