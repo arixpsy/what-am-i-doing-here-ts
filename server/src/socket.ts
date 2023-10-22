@@ -1,5 +1,6 @@
 import Matter from 'matter-js'
 import { Server } from 'socket.io'
+import { Command } from './@types/command.js'
 import { Map } from './@types/map.js'
 import { Sprite } from './@types/sprite.js'
 import type { MapEntities } from './@types/game.js'
@@ -89,7 +90,7 @@ const setupSocket = (
       }
     })
 
-    socket.on('userCommands', function (data) {
+    socket.on('userCommands', function (data: Record<Command, boolean>) {
       MapEntities[mapKey].players[socket.id].command = data
     })
 

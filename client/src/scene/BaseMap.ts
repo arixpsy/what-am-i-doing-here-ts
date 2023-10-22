@@ -39,7 +39,7 @@ export default class BaseMap extends Phaser.Scene {
 				} catch (err) {
 					console.log(err)
 				}
-			},
+			}
 		})
 	}
 
@@ -204,6 +204,10 @@ export default class BaseMap extends Phaser.Scene {
 			if (this.scene.getStatus(mapKey) !== Phaser.Scenes.RUNNING) {
 				this.scene.start(mapKey)
 			}
+		})
+
+		this.io?.on('jump', () => {
+			this.sound.play(SoundKey.JUMP)
 		})
 	}
 

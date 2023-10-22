@@ -94,6 +94,7 @@ setInterval(() => {
         if (command.jump && !isInAir) {
           MapEntities[mapKey].players[socketId].state.isInAir = true
           Matter.Body.applyForce(body, body.position, { x: 0, y: -0.03 })
+          io.to(socketId).emit('jump')
         }
 
         if (isInAir && parseFloat(body.velocity.y.toFixed(10)) === 0) {
