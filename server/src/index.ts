@@ -3,15 +3,14 @@ import 'dotenv/config'
 import express from 'express'
 import http from 'http'
 import Matter from 'matter-js'
-import { Server, Socket } from 'socket.io'
+import { Server } from 'socket.io'
+import { instrument } from "@socket.io/admin-ui";
 import { Environment } from './@types/index.js'
 import type { MapEntities, UpdateStateBody } from './@types/game.js'
 import { Map } from './@types/map.js'
-import type { Sprite } from './@types/sprite.js'
 import { Env, CORS_ORIGIN } from './utils/constants/index.js'
 import MAP_CONFIG from './utils/constants/maps/index.js'
 import { engineConfig } from './utils/constants/matter.js'
-import { createPlayer } from './utils/functions/game.js'
 import {
   toVertices,
   generatePlatforms,
@@ -145,3 +144,11 @@ setInterval(() => {
 }, frameRate)
 
 setupSocket(io, MapEngines, MapEntities)
+
+instrument(io, {
+  auth: {
+    type: 'basic',
+    username: Env.ADMIN_USERNAME,
+    password: Env.ADMIN_PASSWORD
+  },
+});

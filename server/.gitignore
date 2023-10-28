@@ -2,3 +2,4 @@ node_modules
 build
 public/*
 !public/debug
+!public/admin

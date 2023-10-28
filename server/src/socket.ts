@@ -12,6 +12,16 @@ const setupSocket = (
   MapEngines: Record<Map, Matter.Engine>,
   MapEntities: Record<Map, MapEntities>
 ) => {
+  const adminNamespace = io.of('/admin')
+
+  adminNamespace.use((socket, next) => {
+    next()
+  })
+
+  adminNamespace.on('connection', () => {
+    console.log(`🟢 Admin has connected`)
+  })
+
   io.on('connection', (socket) => {
     const displayName = socket.handshake.auth.displayName
     const spriteType = socket.handshake.auth.spriteType as Sprite
