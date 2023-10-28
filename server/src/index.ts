@@ -4,7 +4,7 @@ import express from 'express'
 import http from 'http'
 import Matter from 'matter-js'
 import { Server } from 'socket.io'
-import { instrument } from "@socket.io/admin-ui";
+import { instrument } from '@socket.io/admin-ui'
 import { Environment } from './@types/index.js'
 import type { MapEntities, UpdateStateBody } from './@types/game.js'
 import { Map } from './@types/map.js'
@@ -17,6 +17,7 @@ import {
   generateWalls,
   generatePortals,
 } from './utils/functions/matter.js'
+import { getPerfomance } from './utils/functions/monitor.js'
 import setupSocket from './socket.js'
 
 const port = Env.PORT
@@ -143,12 +144,16 @@ setInterval(() => {
   }
 }, frameRate)
 
+setInterval(() => {
+  io.to('debug').emit('performance', getPerfomance())
+}, 1000)
+
 setupSocket(io, MapEngines, MapEntities)
 
 instrument(io, {
   auth: {
     type: 'basic',
     username: Env.ADMIN_USERNAME,
-    password: Env.ADMIN_PASSWORD
+    password: Env.ADMIN_PASSWORD,
   },
-});
+})

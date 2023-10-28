@@ -37,27 +37,45 @@
       })
     })
 
-    socket.on('update state', ({ platforms, walls, players, map: key, portals }) => {
-      const canvas = map[key].canvas
-      const ctx = map[key].ctx
+    socket.on(
+      'update state',
+      ({ platforms, walls, players, map: key, portals }) => {
+        const canvas = map[key].canvas
+        const ctx = map[key].ctx
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      ctx.fillStyle = '#111'
-      ctx.strokeStyle = '#111'
-      walls.forEach((wall) => draw(wall, ctx))
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        ctx.fillStyle = '#111'
+        ctx.strokeStyle = '#111'
+        walls.forEach((wall) => draw(wall, ctx))
 
-      ctx.fillStyle = '#aaa'
-      platforms.forEach((p) => draw(p, ctx))
+        ctx.fillStyle = '#aaa'
+        platforms.forEach((p) => draw(p, ctx))
 
-      ctx.fillStyle = 'rgba(0, 0, 255, 0.2)'
-      Object.values(players).forEach((p) => draw(p.vertices, ctx))
+        ctx.fillStyle = 'rgba(0, 0, 255, 0.2)'
+        Object.values(players).forEach((p) => draw(p.vertices, ctx))
 
-      ctx.fillStyle = 'rgba(0, 255, 0, 0.2)'
-      portals.forEach((p) => draw(p, ctx))
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.2)'
+        portals.forEach((p) => draw(p, ctx))
 
-      ctx.font = "30px monospace"
-      ctx.fillStyle = 'rgba(0, 0, 0, 1)'
-      ctx.fillText(key, 10, 40);
+        ctx.font = '30px monospace'
+        ctx.fillStyle = 'rgba(0, 0, 0, 1)'
+        ctx.fillText(key, 10, 40)
+      }
+    )
+
+    socket.on('performance', (data) => {
+      console.table(data)
+      const performanceDiv = document.getElementById('performance')
+      performanceDiv.innerHTML = `
+        Load Average: ${data.loadAverage}<br />
+        Free Memory: ${data.freeMemory / 1073741824} GB<br />
+        Used Memory: ${Number(
+          (data.totalMemory - data.freeMemory) / 1073741824
+        ).toFixed(4)} GB<br />
+        Total Memory: ${data.totalMemory / 1073741824} GB<br />
+        Uptime: ${data.uptime}<br/>
+      `
     })
   </script>
+  <div id="performance"></div>
 </body>
