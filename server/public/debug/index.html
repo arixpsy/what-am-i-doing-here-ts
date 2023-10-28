@@ -64,7 +64,6 @@
     )
 
     socket.on('performance', (data) => {
-      console.table(data)
       const performanceDiv = document.getElementById('performance')
       performanceDiv.innerHTML = `
         Load Average: ${data.loadAverage}<br />
@@ -73,7 +72,7 @@
           (data.totalMemory - data.freeMemory) / 1073741824
         ).toFixed(4)} GB<br />
         Total Memory: ${data.totalMemory / 1073741824} GB<br />
-        Uptime: ${data.uptime}<br/>
+        Uptime: ${data.uptime / 3600} hrs<br/>
       `
     })
   </script>
