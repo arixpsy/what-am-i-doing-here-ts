@@ -32,6 +32,7 @@ export class InputController {
 	constructor(
 		scene: Phaser.Scene,
 		io: Socket,
+		buttonElements: Partial<Record<Command, HTMLButtonElement>>,
 		extendedActions: Partial<Record<Command, () => void>>
 	) {
 		this.scene = scene
@@ -40,32 +41,46 @@ export class InputController {
 		for (const c in this.input) {
 			const command = c as Command
 			const key = scene.input.keyboard?.addKey(commandKeyCodes[command])!
+			const buttonElement = buttonElements[command]
+			const extendedAction = extendedActions[command]
 			this.keys[command] = key
 
-			key?.on('down', () => {
-				if (this.input[command] === false) {
-					this.justPressed = true
-				}
+			key?.on('down', () => this.handleKeyDown(command, extendedAction))
+			key?.on('up', () => this.handleKeyUp(command))
 
-				this.input[command] = true
+			if (buttonElement) {
+				buttonElement.addEventListener('mousedown', () =>
+					this.handleKeyDown(command, extendedAction)
+				)
 
-				if (this.justPressed === true) {
-					this.emitInput()
-
-					const extendedAction = extendedActions[command]
-					if (extendedAction) {
-						extendedAction()
-					}
-
-					this.justPressed = false
-				}
-			})
-
-			key?.on('up', () => {
-				this.input[command] = false
-				this.emitInput()
-			})
+				buttonElement.addEventListener('mouseup', () =>
+					this.handleKeyUp(command)
+				)
+			}
 		}
+	}
+
+	handleKeyDown(command: Command, extendedAction?: () => void) {
+		if (this.input[command] === false) {
+			this.justPressed = true
+		}
+
+		this.input[command] = true
+
+		if (this.justPressed === true) {
+			this.emitInput()
+
+			if (extendedAction) {
+				extendedAction()
+			}
+
+			this.justPressed = false
+		}
+	}
+
+	handleKeyUp(command: Command) {
+		this.input[command] = false
+		this.emitInput()
 	}
 
 	emitInput() {

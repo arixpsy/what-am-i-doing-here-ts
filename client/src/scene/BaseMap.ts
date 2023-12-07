@@ -9,6 +9,7 @@ import { MapConfig, Map } from '../../../server/src/@types/map'
 import { Sprite } from '../../../server/src/@types/sprite'
 import { InputController } from '../utils/inputController'
 import SpriteData from '../utils/constants/sprite'
+import { isMobile } from '../utils/functions'
 import chatUI from './../assets/html/chat.html?raw'
 
 export default class BaseMap extends Phaser.Scene {
@@ -33,16 +34,24 @@ export default class BaseMap extends Phaser.Scene {
 
 	init() {
 		this.io = this.game.registry.get('socket') as Socket
-		this.inputController = new InputController(this, this.io, {
-			up: async () => {
-				try {
-					await this.io?.emitWithAck('enter portal')
-					this.sound.play(SoundKey.PORTAL)
-				} catch (err) {
-					console.log(err)
-				}
-			},
-		})
+
+		const mobileButtonElements = this.loadMobileControls()
+
+		this.inputController = new InputController(
+			this,
+			this.io,
+			mobileButtonElements,
+			{
+				up: async () => {
+					try {
+						await this.io?.emitWithAck('enter portal')
+						this.sound.play(SoundKey.PORTAL)
+					} catch (err) {
+						console.log(err)
+					}
+				},
+			}
+		)
 	}
 
 	preload() {}
@@ -141,6 +150,8 @@ export default class BaseMap extends Phaser.Scene {
 	}
 
 	loadChatUI() {
+		if (isMobile()) return
+
 		const chatUIElement = this.add.dom(0, 0).createFromHTML(chatUI)
 		chatUIElement.setOrigin(0, 1)
 		chatUIElement.setY(500)
@@ -170,6 +181,51 @@ export default class BaseMap extends Phaser.Scene {
 					this.inputController?.disableKeyCapture()
 				}
 			})
+	}
+
+	loadMobileControls() {
+		if (isMobile()) {
+			const mobileControlsContainer = document.createElement('div')
+			mobileControlsContainer.id = 'mobile-controls'
+			mobileControlsContainer.className = 'mobile-controls'
+			document.body.appendChild(mobileControlsContainer)
+
+			const directionControlsContainer = document.createElement('div')
+			mobileControlsContainer.appendChild(directionControlsContainer)
+
+			const actionControlsContainer = document.createElement('div')
+			mobileControlsContainer.appendChild(actionControlsContainer)
+
+			const leftButton = document.createElement('button')
+			leftButton.innerText = '<'
+			directionControlsContainer.appendChild(leftButton)
+
+			const rightButton = document.createElement('button')
+			rightButton.innerText = '>'
+			directionControlsContainer.appendChild(rightButton)
+
+			const upButton = document.createElement('button')
+			upButton.innerText = 'P'
+			actionControlsContainer.appendChild(upButton)
+
+			const jumpButton = document.createElement('button')
+			jumpButton.innerText = 'J'
+			actionControlsContainer.appendChild(jumpButton)
+
+			return {
+				up: upButton,
+				left: leftButton,
+				right: rightButton,
+				jump: jumpButton,
+			}
+		}
+
+		return {}
+	}
+
+	unloadMobileControls() {
+		const mobileControls = document.getElementById('mobile-controls')
+		mobileControls?.remove()
 	}
 
 	createMessageBubble(playerId: string, message: string) {
@@ -308,6 +364,7 @@ export default class BaseMap extends Phaser.Scene {
 	}
 
 	unmount() {
+		this.unloadMobileControls()
 		this.sound.stopByKey(this.backgroundSoundKey)
 		this.io?.removeAllListeners('update state')
 		this.io?.removeAllListeners('join map')

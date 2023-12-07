@@ -13,9 +13,36 @@
 			* {
 				font-family: monospace !important;
 			}
-			
+
 			canvas {
 				display: initial;
+			}
+
+			.mobile-controls {
+				position: fixed;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				display: flex;
+				justify-content: space-between;
+			}
+
+			.mobile-controls div {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 5px;
+				gap: 2px;
+				font-size: 5vw;
+				color: rgba(255, 255, 255, 0.4);
+				font-weight: bold;
+			}
+
+			.mobile-controls button {
+				aspect-ratio: 1 / 1;
+				width: 18vw;
+				border-radius: 100vh;
+				border: rgba(255, 255, 255, 0.4) 1px solid;
 			}
 		</style>
 	</head>
