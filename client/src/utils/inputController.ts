@@ -49,11 +49,11 @@ export class InputController {
 			key?.on('up', () => this.handleKeyUp(command))
 
 			if (buttonElement) {
-				buttonElement.addEventListener('mousedown', () =>
+				buttonElement.addEventListener('pointerdown', () =>
 					this.handleKeyDown(command, extendedAction)
 				)
 
-				buttonElement.addEventListener('mouseup', () =>
+				buttonElement.addEventListener('pointerup', () =>
 					this.handleKeyUp(command)
 				)
 			}
