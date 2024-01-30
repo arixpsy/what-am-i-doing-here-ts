@@ -132,6 +132,7 @@ export default class BaseMap extends Phaser.Scene {
 
 		soundManager.play(this.backgroundSoundKey, {
 			loop: true,
+			volume: 0.5
 		})
 	}
 
